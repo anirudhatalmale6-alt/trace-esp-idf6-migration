@@ -350,7 +350,12 @@ void nonvol_write_i32(char *name, int *value) // Name of the value to write
 {
   DLT(DLT_DEBUG, SEND(CONSOLE, sprintf(_xs, "nonvol_write(%s)\r\n", name);))
 
-  if ( nvs_set_i32(my_handle, name, value) != ESP_OK )
+  // TODO(IDF6): PLEASE REVIEW - this was nvs_set_i32(my_handle, name, value) with
+  // value being an int *, so what got stored in NVS was the ADDRESS, not the number.
+  // GCC 15 makes it a hard error ("makes integer from pointer without a cast") where
+  // it used to be a warning. Dereferenced to match the function name and signature,
+  // but this is a genuine bug rather than a 6.0 rename, so please confirm.
+  if ( nvs_set_i32(my_handle, name, *value) != ESP_OK )
   {
     DLT(DLT_CRITICAL, SEND(CONSOLE, sprintf(_xs, "Failed to write %s to NONVOL", name);))
   }

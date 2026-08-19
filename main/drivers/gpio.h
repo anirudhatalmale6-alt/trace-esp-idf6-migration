@@ -8,6 +8,9 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
+#include "driver/gpio.h" // TODO(IDF6): GPIO_NUM_* live here. Used to arrive transitively
+                           // before the 6.0 component split.
+
 /*
  * Global functions
  */

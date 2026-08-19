@@ -39,6 +39,10 @@ extern const json_message_t JSON[];
 /*
  * Definitioins
  */
+// TODO(IDF6): both trace.h and json.h define EXTERN, so whichever is included
+// second was redefining it. Harmless before, an error now that IDF 6.0 builds
+// with -Werror. Undefining first keeps the existing behaviour exactly.
+#undef EXTERN
 #ifdef JSON_C
 #define EXTERN
 #else

@@ -14,6 +14,10 @@
 #include "freertos/task.h"
 #include "serial_io.h"
 
+// TODO(IDF6): both trace.h and json.h define EXTERN, so whichever is included
+// second was redefining it. Harmless before, an error now that IDF 6.0 builds
+// with -Werror. Undefining first keeps the existing behaviour exactly.
+#undef EXTERN
 #ifdef TRACE_C
 #define EXTERN
 #else

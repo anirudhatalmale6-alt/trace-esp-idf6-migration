@@ -8,6 +8,9 @@
 #ifndef _NONVOL_H
 #define _NONVOL_H
 
+#include "nvs.h" // TODO(IDF6): nvs_handle_t was reaching this header by luck via another
+                  // include; IDF 6.0 tightened things up so declare it explicitly.
+
 #define PS_VERSION   0                                    // Persistent storage version
 #define PS_UNINIT(x) (((x) == 0xABAB) || ((x) == 0xFFFF)) // Uninitilized value
 

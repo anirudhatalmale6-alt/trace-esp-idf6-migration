@@ -18,11 +18,11 @@
 #include "stdbool.h"
 #include "esp_log.h"
 #include "gpio.h"
-#include "ledc.h"
-#include "pulse_cnt.h"
-#include "gpio_types.h"
-#include "spi_master.h"
-#include "spi_common.h"
+#include "driver/ledc.h"
+#include "driver/pulse_cnt.h"
+#include "hal/gpio_types.h"
+#include "driver/spi_master.h"
+#include "driver/spi_common.h"
 
 #include "gpio_define.h"
 
@@ -171,17 +171,23 @@ void gpio_init_single(unsigned int type)                                        
           break;
 
         case DIGITAL_IO_IN:
+          // TODO(IDF6): the two (gpio_isr_t) casts below now go via (void *).
+          // The callback field is declared bool (*)(void) but gpio_isr_handler_add()
+          // wants void (*)(void *). GCC 15 (shipped with IDF 6.0) rejects that cast
+          // outright under -Werror=cast-function-type; the (void *) hop is the usual
+          // way to keep it. Generated code is unchanged, but the underlying signature
+          // mismatch is real - worth declaring the callbacks as gpio_isr_t one day.
           DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Digital input: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
           gpio_set_direction(gpio_table[i].gpio_number, GPIO_MODE_INPUT);
           gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
 
-          if ( (gpio_isr_t)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback != NULL )
+          if ( (gpio_isr_t)(void *)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback != NULL )
           {
             DLT(DLT_INFO, SEND(CONSOLE, sprintf(_xs, "Interrupt: (%d) %s", gpio_table[i].gpio_number, gpio_table[i].gpio_name);))
             gpio_intr_disable(gpio_table[i].gpio_number);
             gpio_set_intr_type(gpio_table[i].gpio_number,
                                ((const DIO_struct_t *)(gpio_table[i].gpio_uses))->edge_type); // Setup the interrupt handler
-            gpio_isr_handler_add(gpio_table[i].gpio_number, (gpio_isr_t)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback,
+            gpio_isr_handler_add(gpio_table[i].gpio_number, (gpio_isr_t)(void *)((const DIO_struct_t *)(gpio_table[i].gpio_uses))->callback,
                                  NULL);                                                       // Add in the ISR handler
           }
           break;

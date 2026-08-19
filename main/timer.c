@@ -16,14 +16,14 @@
 
 #include "stdbool.h"
 #include "esp_timer.h"
-// #include "driver\timer.h"
+// #include "driver/timer.h"
 
 #include "common.h"
 #if ( 0 )
 #include "trace.h"
 #include "helpers.h"
 #include "diag_tools.h"
-#include "gpio_types.h"
+#include "hal/gpio_types.h"
 #include "json.h"
 #include "serial_io.h"
 #include "timer.h"
@@ -226,7 +226,7 @@ void trace_synchronous(void *pvParameters)
  *-----------------------------------------------------*/
 bool ft_timer_new(time_count_64_t *new_timer, // Pointer to new down counter
                   time_count_64_t  duration,  // Duration of the timer
-                  void *(callback)(),         // What to do when we hit zero
+                  void (*callback)(void),     // What to do when we hit zero
                   char *name                  // Timer name
 )
 {
@@ -327,17 +327,17 @@ void show_time(void)
  * Rest and use the 1us timer in the ESP32
  *
  *---------------------------------------------------*/
-time_count_64_t run_time_us(void)
+int64_t         run_time_us(void)
 {
   return (esp_timer_get_time() - base_time);
 }
 
-time_count_64_t run_time_ms(void)
+int64_t         run_time_ms(void)
 {
   return (run_time_us()) / 1000;
 }
 
-time_count_64_t run_time_s(void)
+int64_t         run_time_s(void)
 {
   return (run_time_us()) / 1000000;
 }

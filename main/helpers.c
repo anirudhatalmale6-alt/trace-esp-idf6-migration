@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "string.h"
 #include "ctype.h"
-#include "driver\gpio.h"
+#include "driver/gpio.h"
 #include "math.h"
 #include "esp_timer.h"
 #include "esp_random.h"

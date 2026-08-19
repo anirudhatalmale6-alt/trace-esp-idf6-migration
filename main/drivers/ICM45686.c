@@ -18,8 +18,8 @@
 #include "string.h"
 #include "gpio.h"
 #include "math.h"
-#include "spi_master.h"
-#include "spi_common.h"
+#include "driver/spi_master.h"
+#include "driver/spi_common.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
@@ -574,7 +574,13 @@ void ICM45686_find_zero(bool ask_for_confirm) // Ask for save confirmation)
 
   for ( i = 0; i != RAW_FRAME_COUNT; i++ )   // Convert the whole FIFO buffer
   {
-    ICM45686_fixed_unpack(&FIFO_queue[index_in.outer].f[i], &sample);
+    // TODO(IDF6): was ICM45686_fixed_unpack(). Every local in this function
+    // (sample, min_sample, max_sample) is declared FIFO_real_single_t, and
+    // fixed_unpack() wants a FIFO_fixed_single_t *, so this never matched.
+    // Older compilers let the mismatch through as a warning; the 6.0 toolchain
+    // makes it an error. Switched to the _real_ variant, which is the one whose
+    // signature matches the declarations above. PLEASE CONFIRM this was the intent.
+    ICM45686_real_unpack(&FIFO_queue[index_in.outer].f[i], &sample);
     json_x_dotdot_offset += sample.x_dotdot; // Accumulate the X-axis raw acceleration data
     json_y_dotdot_offset += sample.y_dotdot; // Accumulate the Y-axis raw acceleration data
     json_z_dotdot_offset += sample.z_dotdot; // Accumulate the Z-axis raw acceleration data

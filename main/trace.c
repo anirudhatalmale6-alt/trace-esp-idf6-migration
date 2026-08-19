@@ -6,12 +6,12 @@
  *
  *-------------------------------------------------------------*/
 #include "esp_timer.h"
-#include "driver\gpio.h"
+#include "driver/gpio.h"
 #include "esp_random.h"
 #include "stdio.h"
 #include "math.h"
 #include "nvs.h"
-#include "mpu_wrappers.h"
+#include "freertos/mpu_wrappers.h"
 #include "assert.h"
 #include "esp_http_server.h"
 #include "esp_event.h"

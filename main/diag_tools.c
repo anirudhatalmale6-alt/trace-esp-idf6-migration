@@ -14,7 +14,8 @@
 #include "gpio.h"
 #include "esp_timer.h"
 #include "esp_random.h"
-#include "gpio_types.h"
+#include "hal/gpio_types.h"
+#include "driver/gpio.h" // TODO(IDF6): gpio_get_level()/gpio_set_level() are declared here.
 #include "serial_io.h"
 #include "stdbool.h"
 #include "stdio.h"
@@ -22,7 +23,7 @@
 #include "math.h"
 
 #include "common.h"
-#include "wifi.h"
+#include "WiFi.h"
 
 static void show_test_help(void);
 

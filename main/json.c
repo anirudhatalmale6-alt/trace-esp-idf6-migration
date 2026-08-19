@@ -29,23 +29,37 @@ extern time_count_64_t NTP_server_time; // Time reference
 
 char input_JSON[EXTRA_LARGE_STRING];    // JSON input buffer
 
+/*
+ * TODO(IDF6): the casts below were added during the 6.0 migration.
+ *
+ * This table deliberately stores several different pointer types in the two
+ * generic columns - the value column is an int *, the service column is a
+ * void (*)(int) - and the entries are floats, int64s and functions taking
+ * anything from (void) to (unsigned int). A few rows were already cast this
+ * way, the rest relied on the compiler letting the mismatch through.
+ *
+ * GCC 15, which ships with IDF 6.0, makes -Wincompatible-pointer-types an
+ * error. The casts make explicit what the code was already doing, so the
+ * generated table is byte for byte what it was before. Nothing has changed
+ * about how the entries are dispatched.
+ */
 const json_message_t JSON[] = {
     //  show     token               value stored in RAM           convert   service fcn()   NONVOL location         Initial Value
     //  PS Value
 
-    {HIDE, "\"X\":",                &json_x,                         IS_FLOAT,            0,             0,                         0,      0}, // X coordinate of shot
-    {HIDE, "\"Y\":",                &json_y,                         IS_FLOAT,            0,             0,                         0,      0}, // Y coordinate of shot
-    {HIDE, "\"T\":",                &json_timestamp,                 IS_INT32,            &trace_build,  0,                         0,      0}, // Time stamp of shot
-    {HIDE, "\"NTP_ASK\"",           0,                               IS_VOID,             &NTP_ask,      0,                         0,      0}, // Ask to start a time sycn
-    {HIDE, "\"NTP_CLIENT\":",       &NTP_server_time,                IS_INT64,            &NTP_client,   0,                         0,      0}, // Trace to Target NTP
+    {HIDE, "\"X\":",                (int *)&json_x,                  IS_FLOAT,            0,             0,                         0,      0}, // X coordinate of shot
+    {HIDE, "\"Y\":",                (int *)&json_y,                  IS_FLOAT,            0,             0,                         0,      0}, // Y coordinate of shot
+    {HIDE, "\"T\":",                (int *)&json_timestamp,          IS_INT32,            (void (*)(int))(void *)&trace_build, 0,                         0,      0}, // Time stamp of shot
+    {HIDE, "\"NTP_ASK\"",           0,                               IS_VOID,             (void (*)(int))&NTP_ask, 0,                         0,      0}, // Ask to start a time sycn
+    {HIDE, "\"NTP_CLIENT\":",       (int *)&NTP_server_time,         IS_INT64,            (void (*)(int))&NTP_client, 0,                         0,      0}, // Trace to Target NTP
     {SHOW, "\"NTP_PERIOD\"",        &json_NTP_period,                IS_INT32,            0,             0,                         0,      0}, // Time between sync
-    {HIDE, "\"NTP_SERVER\"",        0,                               IS_VOID,             &NTP_server,   0,                         0,      0}, // Target to Trace NTP
+    {HIDE, "\"NTP_SERVER\"",        0,                               IS_VOID,             (void (*)(int))&NTP_server, 0,                         0,      0}, // Target to Trace NTP
 
     {SHOW, "\"DISTANCE\":",         (int *)&json_distance_to_target, IS_FLOAT,            0,             NONVOL_DISTANCE_TO_TARGET, 10000,  0},
     {SHOW, "\"MUZZLE_VELOCITY\":",  (int *)&json_muzzle_velocity,    IS_FLOAT,            0,             NONVOL_MUZZLE_VELOCITY,    17500,  0},
     {SHOW, "\"TRACE_SIZE\":",       &json_trace_size,                IS_INT32,            0,             NONVOL_TRACE_SIZE,         100,    0},
-    {HIDE, "\"ECHO\"",              0,                               IS_VOID,             &show_echo,    0,                         0,      0},
-    {HIDE, "\"INIT\"",              0,                               IS_VOID,             &init_nonvol,  0,                         0,      0},
+    {HIDE, "\"ECHO\"",              0,                               IS_VOID,             (void (*)(int))&show_echo, 0,                         0,      0},
+    {HIDE, "\"INIT\"",              0,                               IS_VOID,             (void (*)(int))&init_nonvol, 0,                         0,      0},
     {SHOW, "\"X_DOTDOT_OFFSET\":",  &json_x_dotdot_offset,           IS_INT32,            0,             NONVOL_X_DOTDOT_OFFSET,    0,      0},
     {SHOW, "\"Y_DOTDOT_OFFSET\":",  &json_y_dotdot_offset,           IS_INT32,            0,             NONVOL_Y_DOTDOT_OFFSET,    0,      0},
     {SHOW, "\"Z_DOTDOT_OFFSET\":",  &json_z_dotdot_offset,           IS_INT32,            0,             NONVOL_Z_DOTDOT_OFFSET,    0,      0},
@@ -59,11 +73,11 @@ const json_message_t JSON[] = {
     {SHOW, "\"WIFI_PWD\":",         (int *)&json_wifi_pwd,           IS_TEXT + PWD_SIZE,  0,             NONVOL_WIFI_PWD,           0,      0},
     {SHOW, "\"WIFI_SSID\":",        (int *)&json_wifi_ssid,          IS_TEXT + SSID_SIZE, 0,             NONVOL_WIFI_SSID,          0,      0},
 
-    {HIDE, "\"RESET\"",             0,                               IS_VOID,             &esp_restart,  0,                         0,      0},
+    {HIDE, "\"RESET\"",             0,                               IS_VOID,             (void (*)(int))&esp_restart, 0,                         0,      0},
     {HIDE, "\"SN\":",               &json_serial_number,             IS_FIXED,            0,             NONVOL_SERIAL_NO,          0xffff, 0},
-    {HIDE, "\"TEST\":",             0,                               IS_INT32,            &self_test,    0,                         0,      0},
-    {SHOW, "\"TRACE\":",            0,                               IS_INT32,            &set_trace,    0,                         0,      0},
-    {SHOW, "\"VERSION\"",           0,                               IS_INT32,            &POST_version, 0,                         0,      0},
+    {HIDE, "\"TEST\":",             0,                               IS_INT32,            (void (*)(int))&self_test, 0,                         0,      0},
+    {SHOW, "\"TRACE\":",            0,                               IS_INT32,            (void (*)(int))&set_trace, 0,                         0,      0},
+    {SHOW, "\"VERSION\"",           0,                               IS_INT32,            (void (*)(int))&POST_version, 0,                         0,      0},
     {0,    0,                       0,                               0,                   0,             0,                         0,      0}
 };
 
@@ -143,6 +157,7 @@ void                trace_json(void *pvParameters)
             vTaskDelay(TICK_10ms);
             serial_flush(ALL);
           }
+          __attribute__((fallthrough)); // TODO(IDF6): deliberate, see comment above
 
         case '{':
           in_JSON           = 0;
@@ -162,9 +177,11 @@ void                trace_json(void *pvParameters)
 
         case '^':                     // Special case for European keyboards which have a different "*" key
           ch = '"';                   // Convert and fall through
+          __attribute__((fallthrough)); // TODO(IDF6): deliberate, see comment above
 
         case '"':                     // Start or end of text
           keep_space = (keep_space ^ 1) & 1;
+          __attribute__((fallthrough)); // TODO(IDF6): deliberate, see comment above
 
         default:
           if ( (ch != ' ') || keep_space )
@@ -439,7 +456,9 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"NETWORK_TIME\":      %lld,", NTP_time_us());)      // Network  time
   SEND(CONSOLE, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);) // Current software version
   SEND(CONSOLE, sprintf(_xs, "\"BOARD REVISION\":   %d, ", board_revision);)   // Current board version
-  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
+  // TODO(IDF6): j is an int, nvs_get_i32() wants an int32_t *. Same width on this
+  // target, so the cast is safe and generates identical code.
+  nvs_get_i32(my_handle, NONVOL_PS_VERSION, (int32_t *)&j);
   SEND(CONSOLE, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                // Current persistent storage version
                                                                                /*
                                                                                 *  All done, return

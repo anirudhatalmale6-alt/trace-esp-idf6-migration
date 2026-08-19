@@ -33,7 +33,7 @@ typedef float            real_t;          // ESP32 has built in single precision
 
 #include "IMU.h"
 
-#include "ntp.h"
+#include "NTP.h"
 #include "client.h"
 #include "server.h"
 #include "nvs_flash.h"

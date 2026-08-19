@@ -7,9 +7,9 @@
  * ----------------------------------------------------*/
 #include <string.h>
 #include "esp_log.h"
-#include "rmt_tx.h"
-#include "gpio_types.h"
-#include "driver\gpio.h"
+#include "driver/rmt_tx.h"
+#include "hal/gpio_types.h"
+#include "driver/gpio.h"
 #include "esp_timer.h"
 
 #include "common.h"

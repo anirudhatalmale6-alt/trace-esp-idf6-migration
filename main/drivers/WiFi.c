@@ -22,9 +22,9 @@
  * https://docs.espressif.com/projects/esp-protocols/mdns/docs/latest/en/index.html
  *
  * *****************************************************************************/
-#include "FreeRTOS.h"
-#include "event_groups.h"
-#include "task.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+#include "freertos/task.h"
 #include <string.h>
 // #include "mdns.h"
 
@@ -36,7 +36,7 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include "dns.h"
+#include "lwip/dns.h"
 #include "lwip/err.h"
 #include "lwip/ip4_addr.h"
 #include "lwip/netdb.h"

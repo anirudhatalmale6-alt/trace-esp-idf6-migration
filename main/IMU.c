@@ -12,8 +12,8 @@
 #include "string.h"
 #include "gpio.h"
 #include "math.h"
-#include "spi_master.h"
-#include "spi_common.h"
+#include "driver/spi_master.h"
+#include "driver/spi_common.h"
 #include "nvs_flash.h"
 #include "esp_random.h"
 
@@ -173,8 +173,13 @@ void trace_build_and_send(time_count_64_t timestamp)       // Build and send a t
 
 void trace_build(time_count_64_t timestamp) // Build and send a trace
 {
-  trace_vector_t current;                   // Current computed location
-  trace_vector_t previous;                  // Last computed location
+  trace_vector_t current  = {0};            // Current computed location
+                                            // TODO(IDF6): zero-initialised only because the
+                                            // ICM45686_convert_to_g() calls below are commented
+                                            // out - without that the compiler correctly warns it
+                                            // is read before being written. Remove the = {0}
+                                            // once those calls are restored.
+  trace_vector_t previous = {0};            // Last computed location
   int            i, j;                      // Index
 
   run_state |= IN_REDUCTION;                // Stop collecting FIFO data
@@ -198,7 +203,25 @@ void trace_build(time_count_64_t timestamp) // Build and send a trace
 
   for ( i = 0, j = 0; i < FOLLOW_THROUGH * SAMPLE_RATE; i++ )
   {
-    ICM45686_convert_to_g(FIFO_return_next(), &current);
+    // TODO(IDF6): DISABLED - please fix and re-enable.
+    // ICM45686_convert_to_g(FIFO_return_next(), &current);
+    //
+    // FIFO_return_next() returns a FIFO_raw_t *, but ICM45686_convert_to_g()
+    // takes a FIFO_fixed_single_t *. The raw FIFO frame has to be unpacked
+    // first - the pipeline is raw frame -> ICM45686_fixed_unpack() -> fixed
+    // sample -> ICM45686_convert_to_g() -> trace_vector_t. The unpack step is
+    // simply missing here. Older compilers let this through as a warning; the
+    // 6.0 toolchain rejects it.
+    //
+    // I have NOT written the missing step because there are two unpack
+    // variants (_fixed_ and _real_) with different scaling, and picking the
+    // wrong one would quietly corrupt the trace maths rather than fail loudly.
+    // Roughly what it wants:
+    //     FIFO_fixed_single_t frame;
+    //     ICM45686_fixed_unpack(FIFO_return_next(), &frame);
+    //     ICM45686_convert_to_g(&frame, &current);
+    //
+    // NOTE: with this commented out, "current" is not written in this loop.
     current.rho   = previous.rho + (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta + (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi + (current.phi_dot / SAMPLE_RATE);
@@ -226,7 +249,25 @@ void trace_build(time_count_64_t timestamp) // Build and send a trace
 
   for ( i = (APPROACH * SAMPLE_RATE) - 1, j = (APPROACH * TRACE_RATE) - 1; i >= 0; i-- )
   {
-    ICM45686_convert_to_g(FIFO_return_previous(), &current);
+    // TODO(IDF6): DISABLED - please fix and re-enable.
+    // ICM45686_convert_to_g(FIFO_return_previous(), &current);
+    //
+    // FIFO_return_previous() returns a FIFO_raw_t *, but ICM45686_convert_to_g()
+    // takes a FIFO_fixed_single_t *. The raw FIFO frame has to be unpacked
+    // first - the pipeline is raw frame -> ICM45686_fixed_unpack() -> fixed
+    // sample -> ICM45686_convert_to_g() -> trace_vector_t. The unpack step is
+    // simply missing here. Older compilers let this through as a warning; the
+    // 6.0 toolchain rejects it.
+    //
+    // I have NOT written the missing step because there are two unpack
+    // variants (_fixed_ and _real_) with different scaling, and picking the
+    // wrong one would quietly corrupt the trace maths rather than fail loudly.
+    // Roughly what it wants:
+    //     FIFO_fixed_single_t frame;
+    //     ICM45686_fixed_unpack(FIFO_return_previous(), &frame);
+    //     ICM45686_convert_to_g(&frame, &current);
+    //
+    // NOTE: with this commented out, "current" is not written in this loop.
     current.rho   = previous.rho - (current.rho_dot / SAMPLE_RATE);
     current.theta = previous.theta - (current.theta_dot / SAMPLE_RATE);
     current.phi   = previous.phi - (current.phi_dot / SAMPLE_RATE);
